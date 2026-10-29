@@ -75,7 +75,7 @@
 
   /** Masks letters and digits so that no page content leaves the browser, keeping the shape of the text. */
   function mask(text) {
-    return text.replace(/\p{Lu}/gu, 'X').replace(/\p{L}/gu, 'x').replace(/\p{N}/gu, '0');
+    return text.replace(/\p{L}|\p{N}/gu, (char) => (/\p{N}/u.test(char) ? '0' : /\p{Lu}/u.test(char) ? 'X' : 'x'));
   }
 
   /** Computed styles that the conversion relies on, when they are not the default. */
