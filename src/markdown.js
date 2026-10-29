@@ -394,6 +394,8 @@
       if (child.nodeType !== ELEMENT_NODE) continue;
       const kind = kindOf(child, ctx);
       if (kind === 'skip') continue;
+      // Editors put empty elements (drag handles, spacers…) between blocks: they must not split a list.
+      if (items.length && isEmpty(child, kind)) continue;
       // Consecutive list items are grouped into one list, even when the editor wraps each of them
       // in its own container or list element, or draws the bullets with CSS.
       const listItems = groupableItems(child, kind, ctx);
@@ -415,6 +417,12 @@
     return blocks;
   }
 
+  /** An element without any content to convert (list items aside: an empty item is part of its list). */
+  function isEmpty(el, kind) {
+    if (kind === 'listitem' || kind === 'list' || kind === 'img' || kind === 'checkbox' || kind === 'hr') return false;
+    return !el.textContent.replace(ZERO_WIDTH, '').trim() && !el.querySelector('img,input,hr,[role="img"],[role="checkbox"]');
+  }
+
   /** The list items `el` consists of (itself, its items, or those of the wrappers it only holds), or null. */
   function groupableItems(el, kind, ctx) {
     if (kind === 'listitem') return [el];
@@ -429,7 +437,7 @@
         if (rawText(child, ctx).trim()) return null;
       } else if (child.nodeType === ELEMENT_NODE) {
         const childKind = kindOf(child, ctx);
-        if (childKind === 'skip') continue;
+        if (childKind === 'skip' || isEmpty(child, childKind)) continue;
         const childItems = groupableItems(child, childKind, ctx);
         if (!childItems) return null;
         items.push(...childItems);

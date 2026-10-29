@@ -24,6 +24,8 @@ _Supprimé_) ; `npm run release` transforme ensuite cette section en nouvelle ve
   consécutifs sont regroupés en une seule liste, leur niveau d'imbrication est retrouvé, et le type de liste
   (puces ou numéros) suit ce qui est affiché plutôt que la balise HTML.
 - Les éléments de liste vides ne sont plus exportés.
+- Les éléments vides que Loop place entre les puces (poignées, séparateurs) ne coupent plus une liste en
+  plusieurs : l'indentation des sous-puces est conservée.
 
 ## [1.0.0] - 2026-10-29
 

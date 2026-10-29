@@ -88,6 +88,13 @@ test('list items wrapped one by one are grouped, empty items dropped', () => {
   assert.equal(md('<ul><li>a</li></ul><ol><li>un</li></ol>'), '- a\n\n1. un\n');
 });
 
+test('empty elements between list items do not split the list', () => {
+  const item = (text, level) =>
+    `<div class="block"><span class="handle" contenteditable="false"></span>` +
+    `<div class="content"><ul><li aria-level="${level}">${text}</li></ul></div></div><div class="spacer"></div>`;
+  assert.equal(md(`${item('a', 1)}${item('a1', 2)}${item('a2', 3)}${item('b', 1)}`), '- a\n  - a1\n    - a2\n- b\n');
+});
+
 test('task lists', () => {
   assert.equal(
     md(
