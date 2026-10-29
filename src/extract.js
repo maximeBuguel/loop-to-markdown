@@ -69,7 +69,14 @@
   }
 
   const DIAGNOSTIC_LIMIT = 400000;
-  const SHOWN_ATTRIBUTES = /^(role|aria-.*|contenteditable|class|id|data-.*|type|checked|start|href|src|alt)$/;
+  const SHOWN_ATTRIBUTES = /^(role|aria-.*|contenteditable|class|id|data-.*|type|checked|start|href|src|alt|title)$/;
+  // Attributes that can hold page content: masked like the text.
+  const CONTENT_ATTRIBUTES = /^(aria-label|aria-description|aria-valuetext|alt|title|href|src|data-.*)$/;
+
+  /** Masks letters and digits so that no page content leaves the browser, keeping the shape of the text. */
+  function mask(text) {
+    return text.replace(/\p{Lu}/gu, 'X').replace(/\p{L}/gu, 'x').replace(/\p{N}/gu, '0');
+  }
 
   /** Computed styles that the conversion relies on, when they are not the default. */
   function describeStyle(el) {
@@ -91,12 +98,13 @@
 
   /**
    * Indented outline of the content: tags, roles, classes and the computed styles used by the
-   * conversion. It contains the page text: meant to be shared deliberately to report a bug.
+   * conversion, to report a wrong export. Text is masked ("Xxxx 00"): it can be shared even when
+   * the page is confidential.
    */
   function diagnose() {
     const doc = document;
     const { root: start } = contentRoot(doc);
-    const lines = [`Loop to Markdown — diagnostic`, `URL: ${location.origin}${location.pathname}`, ''];
+    const lines = ['Loop to Markdown — diagnostic (texte masqué)', `Site : ${location.origin}`, ''];
     let size = 0;
     const push = (line) => {
       size += line.length + 1;
@@ -107,14 +115,17 @@
       const pad = '  '.repeat(depth);
       if (node.nodeType === Node.TEXT_NODE) {
         const text = node.nodeValue.replace(/\s+/g, ' ').trim();
-        if (text) push(`${pad}${JSON.stringify(text)}`);
+        if (text) push(`${pad}${JSON.stringify(mask(text))}`);
         return;
       }
       if (node.nodeType !== Node.ELEMENT_NODE) return;
       const tag = node.localName;
       const attributes = [...node.attributes]
         .filter((attribute) => SHOWN_ATTRIBUTES.test(attribute.name))
-        .map((attribute) => `${attribute.name}="${attribute.value.slice(0, 80)}"`);
+        .map((attribute) => {
+          const value = attribute.value.slice(0, 80);
+          return `${attribute.name}="${CONTENT_ATTRIBUTES.test(attribute.name) ? mask(value) : value}"`;
+        });
       if (/^(script|style|svg|noscript|template)$/.test(tag)) {
         push(`${pad}<${[tag, ...attributes].join(' ')} />`);
         return;

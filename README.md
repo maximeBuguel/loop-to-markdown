@@ -81,8 +81,8 @@ entièrement dans le navigateur.
 
 - La structure de Loop n'est pas documentée et peut changer : en cas d'export incorrect, utiliser le
   copier-coller, et ouvrir une issue avec le diagnostic (lien **Copier un diagnostic** de l'extension). Il décrit
-  la structure de la page et les styles utilisés par la conversion ; il contient aussi le texte de la page,
-  à retirer si besoin avant de le partager.
+  la structure de la page et les styles utilisés par la conversion, avec le texte masqué (`Xxxx 00`) : il peut
+  être partagé même si la page est confidentielle.
 - Les images collées dans Loop ne sont pas accessibles hors de Loop : elles sont exportées sous la forme
   `[image: texte alternatif]`.
 - Les sections repliées ou les longues pages que Loop n'a pas encore affichées peuvent manquer : les déplier ou

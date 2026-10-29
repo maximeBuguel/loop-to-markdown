@@ -16,7 +16,7 @@ _Supprimé_) ; `npm run release` transforme ensuite cette section en nouvelle ve
 ### Ajouté
 
 - Bouton **Copier un diagnostic** : copie la structure de la page (balises, rôles, styles utilisés par la
-  conversion, et le texte), à partager pour corriger un export incorrect.
+  conversion), à partager pour corriger un export incorrect. Le texte de la page y est masqué (`Xxxx 00`).
 
 ### Corrigé
 
