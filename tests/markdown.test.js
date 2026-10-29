@@ -78,6 +78,16 @@ test('flat lists indented with aria-level', () => {
   );
 });
 
+test('list items wrapped one by one are grouped, empty items dropped', () => {
+  const item = (text, level = 1) => `<div class="p"><ol><li aria-level="${level}">${text}</li></ol></div>`;
+  assert.equal(
+    md(`<p>Avant</p>${item('a')}${item('a1', 2)}${item('')}${item('b')}<p>Après</p>`),
+    'Avant\n\n1. a\n   1. a1\n2. b\n\nAprès\n'
+  );
+  // Bullets then numbers: two lists.
+  assert.equal(md('<ul><li>a</li></ul><ol><li>un</li></ol>'), '- a\n\n1. un\n');
+});
+
 test('task lists', () => {
   assert.equal(
     md(

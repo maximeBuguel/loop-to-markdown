@@ -80,7 +80,9 @@ entièrement dans le navigateur.
 ### Limites connues
 
 - La structure de Loop n'est pas documentée et peut changer : en cas d'export incorrect, utiliser le
-  copier-coller, et ouvrir une issue avec un extrait du HTML de la page (clic droit → **Inspecter**).
+  copier-coller, et ouvrir une issue avec le diagnostic (lien **Copier un diagnostic** de l'extension). Il décrit
+  la structure de la page et les styles utilisés par la conversion ; il contient aussi le texte de la page,
+  à retirer si besoin avant de le partager.
 - Les images collées dans Loop ne sont pas accessibles hors de Loop : elles sont exportées sous la forme
   `[image: texte alternatif]`.
 - Les sections repliées ou les longues pages que Loop n'a pas encore affichées peuvent manquer : les déplier ou

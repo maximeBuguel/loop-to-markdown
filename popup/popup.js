@@ -10,6 +10,7 @@ const selectionOption = document.getElementById('selection-option');
 const selectionOnly = document.getElementById('selection-only');
 const copyButton = document.getElementById('copy');
 const downloadButton = document.getElementById('download');
+const diagnosticButton = document.getElementById('diagnostic');
 
 // What was exported: { title, url, markdown, selection, hasSelection }.
 let source = { title: '', url: '', markdown: '' };
@@ -47,26 +48,32 @@ function render() {
   updateStats();
 }
 
-/** Converts the page in every frame of the tab and keeps the most relevant result. */
-async function extractFromTab() {
+async function activeTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab || !/^https?:/.test(tab.url || '')) throw new Error('Cette page ne peut pas être exportée.');
+  return tab;
+}
 
+/** Runs `func(arg)` in every frame of the tab, after injecting the converter. */
+async function runInTab(tab, func, arg) {
   const run = async (allFrames) => {
     const target = { tabId: tab.id, allFrames };
     await chrome.scripting.executeScript({ target, files: ['src/markdown.js', 'src/extract.js'] });
-    return chrome.scripting.executeScript({
-      target,
-      func: (options) => globalThis.LoopToMarkdownExtract.extract(options),
-      args: [{ selectionOnly: selectionOnly.checked }],
-    });
+    return chrome.scripting.executeScript({ target, func, args: [arg] });
   };
-  let results;
   try {
-    results = await run(true);
+    return await run(true);
   } catch {
-    results = await run(false); // a frame refused the injection: the main page alone
+    return run(false); // a frame refused the injection: the main page alone
   }
+}
+
+/** Converts the page in every frame of the tab and keeps the most relevant result. */
+async function extractFromTab() {
+  const tab = await activeTab();
+  const results = await runInTab(tab, (options) => globalThis.LoopToMarkdownExtract.extract(options), {
+    selectionOnly: selectionOnly.checked,
+  });
 
   const found = results.map((result) => result.result).filter((result) => result && result.markdown.trim());
   const best =
@@ -124,6 +131,21 @@ copyButton.addEventListener('click', async () => {
   } catch (error) {
     output.select();
     setStatus('Copie impossible : sélectionnez le texte et faites Ctrl+C.', 'error');
+  }
+});
+
+diagnosticButton.addEventListener('click', async () => {
+  try {
+    const results = await runInTab(await activeTab(), () => globalThis.LoopToMarkdownExtract.diagnose());
+    const report = results
+      .map((result) => result.result)
+      .filter(Boolean)
+      .sort((a, b) => b.length - a.length)
+      .join('\n\n');
+    await navigator.clipboard.writeText(report);
+    setStatus('Diagnostic copié : collez-le dans un fichier pour le partager.', 'success');
+  } catch (error) {
+    setStatus(`Diagnostic impossible : ${error.message || error}`, 'error');
   }
 });
 

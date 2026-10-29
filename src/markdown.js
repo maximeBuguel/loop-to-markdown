@@ -98,7 +98,14 @@
     if (!ctx.live) return null;
     const content = el.ownerDocument.defaultView.getComputedStyle(el, '::before').content || '';
     if (/counter\(/.test(content)) return 'ordered';
-    if (/^"[•◦▪▫‣⁃●○■□]"$/.test(content)) return 'unordered';
+    return content.startsWith('"') ? markerType(content.slice(1, -1)) : null;
+  }
+
+  /** Type of list marker written as text: "1.", "a)", "•"… */
+  function markerType(text) {
+    const marker = text.trim();
+    if (/^(\d+|[a-z]|[ivxlc]+)[.)]$/i.test(marker)) return 'ordered';
+    if (/^[•◦▪▫‣⁃●○■□·]$/.test(marker)) return 'unordered';
     return null;
   }
 
@@ -387,10 +394,12 @@
       if (child.nodeType !== ELEMENT_NODE) continue;
       const kind = kindOf(child, ctx);
       if (kind === 'skip') continue;
-      // List items outside a list (e.g. bullets drawn with CSS) are grouped into one list.
-      if (kind === 'listitem') {
+      // Consecutive list items are grouped into one list, even when the editor wraps each of them
+      // in its own container or list element, or draws the bullets with CSS.
+      const listItems = groupableItems(child, kind, ctx);
+      if (listItems) {
         flushInline();
-        items.push(child);
+        items.push(...listItems);
         continue;
       }
       flushItems();
@@ -404,6 +413,29 @@
     flushItems();
     flushInline();
     return blocks;
+  }
+
+  /** The list items `el` consists of (itself, its items, or those of the wrappers it only holds), or null. */
+  function groupableItems(el, kind, ctx) {
+    if (kind === 'listitem') return [el];
+    if (kind === 'list') {
+      const children = listChildren(el, ctx);
+      return children.length && children.every((child) => kindOf(child, ctx) === 'listitem') ? children : null;
+    }
+    if (kind !== 'block') return null;
+    const items = [];
+    for (const child of el.childNodes) {
+      if (child.nodeType === TEXT_NODE) {
+        if (rawText(child, ctx).trim()) return null;
+      } else if (child.nodeType === ELEMENT_NODE) {
+        const childKind = kindOf(child, ctx);
+        if (childKind === 'skip') continue;
+        const childItems = groupableItems(child, childKind, ctx);
+        if (!childItems) return null;
+        items.push(...childItems);
+      }
+    }
+    return items.length ? items : null;
   }
 
   function renderBlockElement(el, kind, ctx) {
@@ -463,11 +495,21 @@
   }
 
   function isOrderedItem(el, list, ctx) {
-    if (list && list.localName === 'ol') return true;
-    if (el.parentElement && el.parentElement.localName === 'ol') return true;
     const style = computed(el, ctx);
-    if (style && style.display === 'list-item' && !UNORDERED_STYLES.has(style.listStyleType)) return true;
-    return pseudoMarker(el, ctx) === 'ordered';
+    if (style) {
+      // On the live page, the displayed marker wins over the tag: an <ol> can be styled with bullets.
+      const pseudo = pseudoMarker(el, ctx);
+      if (pseudo) return pseudo === 'ordered';
+      const type = style.listStyleType || '';
+      if (style.display === 'list-item' && type !== 'none') {
+        return !(UNORDERED_STYLES.has(type) || (type.startsWith('"') && markerType(type.slice(1, -1)) !== 'ordered'));
+      }
+      // Marker drawn as text by a decorative first child.
+      const marker = el.querySelector(':scope > [aria-hidden="true"]:first-child');
+      const drawn = marker && markerType(marker.textContent);
+      if (drawn) return drawn === 'ordered';
+    }
+    return (list && list.localName === 'ol') || (!!el.parentElement && el.parentElement.localName === 'ol');
   }
 
   /**
@@ -510,15 +552,19 @@
     return `${marker}${indentLines(body, ' '.repeat(marker.length))}`.trimEnd();
   }
 
+  function startOf(item, list) {
+    const ol = list && list.localName === 'ol' ? list : item.closest('ol');
+    return (ol && parseInt(ol.getAttribute('start'), 10)) || 1;
+  }
+
   /** `children`: list item and nested list elements, in order. */
   function renderList(children, list, ctx) {
     const items = children.filter((child) => kindOf(child, ctx) === 'listitem');
     if (!children.length) return [];
-    const ordered = items.length > 0 && isOrderedItem(items[0], list, ctx);
     const flat = items.length === children.length && items.every((item) => !item.querySelector('ul,ol,[role="list"]'));
     const levels = flat ? flatLevels(items, ctx) : children.map(() => 0);
-    const start = list && list.localName === 'ol' ? parseInt(list.getAttribute('start'), 10) || 1 : 1;
     const counters = [];
+    const types = [];
     const lines = [];
     let itemPad = '';
 
@@ -530,11 +576,20 @@
         return;
       }
       const level = levels[index];
-      counters.length = level + 1;
-      counters[level] = (counters[level] || (level === 0 ? start - 1 : 0)) + 1;
-      const marker = ordered ? `${counters[level]}. ` : '- ';
+      const ordered = isOrderedItem(child, list, ctx);
+      counters.length = types.length = level + 1;
+      if (types[level] !== ordered) {
+        // Bullets followed by numbers (or the reverse): a new list.
+        if (level === 0 && lines.length) lines.push('');
+        counters[level] = level === 0 && ordered ? startOf(child, list) - 1 : 0;
+      }
+      types[level] = ordered;
+      const marker = ordered ? `${++counters[level]}. ` : '- ';
+      // Each level is indented under the marker of the level above.
       const indent = ' '.repeat(level * (ordered ? 3 : 2));
-      lines.push(indentAll(renderListItem(child, marker, ctx), indent));
+      const item = renderListItem(child, marker, ctx);
+      if (item.length > marker.trimEnd().length) lines.push(indentAll(item, indent)); // empty items are dropped
+      else counters[level]--;
       itemPad = indent + ' '.repeat(marker.length);
     });
     return lines.length ? [lines.join('\n')] : [];

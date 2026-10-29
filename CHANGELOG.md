@@ -13,6 +13,18 @@ _Supprimé_) ; `npm run release` transforme ensuite cette section en nouvelle ve
 
 ## [Non publié]
 
+### Ajouté
+
+- Bouton **Copier un diagnostic** : copie la structure de la page (balises, rôles, styles utilisés par la
+  conversion, et le texte), à partager pour corriger un export incorrect.
+
+### Corrigé
+
+- Listes à puces de Loop exportées comme une suite de listes numérotées d'un seul élément : les éléments
+  consécutifs sont regroupés en une seule liste, leur niveau d'imbrication est retrouvé, et le type de liste
+  (puces ou numéros) suit ce qui est affiché plutôt que la balise HTML.
+- Les éléments de liste vides ne sont plus exportés.
+
 ## [1.0.0] - 2026-10-29
 
 Première version.
