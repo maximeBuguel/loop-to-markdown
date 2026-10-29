@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Loop to Markdown</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Loop → Markdown</h1>
+      <span id="status" role="status"></span>
+    </header>
+
+    <div class="options">
+      <label><input type="checkbox" id="header" checked /> Ajouter titre, lien et date</label>
+      <label id="selection-option" hidden><input type="checkbox" id="selection-only" checked /> Uniquement la sélection</label>
+    </div>
+
+    <textarea id="output" spellcheck="false" aria-label="Markdown exporté"
+      placeholder="Ouvrez une page Loop, ou collez ici (Ctrl+V) un contenu copié depuis Loop."></textarea>
+
+    <p class="hint">
+      Export incomplet ? Dans Loop, faites <kbd>Ctrl</kbd>+<kbd>A</kbd> puis <kbd>Ctrl</kbd>+<kbd>C</kbd>, et collez
+      ici avec <kbd>Ctrl</kbd>+<kbd>V</kbd>.
+    </p>
+
+    <footer>
+      <span id="stats"></span>
+      <button type="button" id="copy">Copier</button>
+      <button type="button" id="download" class="primary">Télécharger .md</button>
+    </footer>
+
+    <script src="../src/markdown.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

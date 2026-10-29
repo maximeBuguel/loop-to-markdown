@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Refinement Sprint 12 | Microsoft Loop</title>
+    <!-- Mimics an editor like Loop's: formatting through classes, bullets drawn with CSS, app chrome around. -->
+    <style>
+      body { font-family: 'Segoe UI', sans-serif; }
+      .b { font-weight: 700; }
+      .i { font-style: italic; }
+      .s { text-decoration: line-through; }
+      .mono { font-family: Consolas, monospace; }
+      .h1 { font-size: 28px; font-weight: 700; }
+      .bullet { position: relative; padding-left: 24px; }
+      .bullet::before { content: "•"; position: absolute; left: 8px; }
+      .bullet.l2 { margin-left: 24px; }
+      .num { counter-increment: n; padding-left: 24px; }
+      .num::before { content: counter(n) "."; }
+      .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+      .gone { display: none; }
+      .codeblock { font-family: Consolas, monospace; white-space: pre; }
+      .codeblock > div { display: block; }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <div class="sidebar"><div class="item">Espace d'équipe</div><div class="item">Autre page</div></div>
+      <div class="canvas">
+        <div class="title" contenteditable="true">Refinement Sprint 12</div>
+        <div role="toolbar"><span>Gras</span><span>Italique</span></div>
+        <div class="page" contenteditable="true">
+          <div class="h1" role="heading" aria-level="2">Contexte</div>
+          <div>Le PO veut <span class="b">simplifier</span> l'<span class="i">onboarding</span>, sans <span class="s">SSO</span> et avec l'API <span class="mono">POST /users</span>.<span class="sr">Fin du paragraphe</span></div>
+          <div class="bullet">Écran d'accueil</div>
+          <div class="bullet l2">Logo</div>
+          <div class="bullet">Formulaire</div>
+          <div class="gone">brouillon caché</div>
+          <div style="counter-reset: n">
+            <div class="num">Créer le compte</div>
+            <div class="num">Envoyer l'e-mail</div>
+          </div>
+          <div><span role="checkbox" aria-checked="true" contenteditable="false"></span> Valider la maquette avec <span contenteditable="false" class="mention">@Alice</span></div>
+          <div role="grid" contenteditable="false">
+            <div role="row"><div role="columnheader">US</div><div role="columnheader">Points <button>⋯</button></div></div>
+            <div role="row"><div role="gridcell"><div contenteditable="true">Connexion</div></div><div role="gridcell"><div contenteditable="true">3</div></div></div>
+          </div>
+          <div class="codeblock"><div>{</div><div>  "email": "a@b.c"</div><div>}</div></div>
+        </div>
+        <div class="comments"><div>Commentaire de Bob</div><div contenteditable="true"></div></div>
+      </div>
+    </div>
+  </body>
+</html>
